@@ -22,21 +22,22 @@ obs: praticamente todos os comandos na biblioteca disnake são assíncronos, ent
 
 
 
-# Comando simples de texto
+## Comando simples usando preffix
     @bot.command()
     async def nome_do_comando(ctx):
         pass
 
 
-# Slash command
+## Slash command
     @bot.slash_command(name='', description='')     
     async def scrim(self, inter: disnake.ApplicationCommandInteraction):
 
-# Voce pode colocar só inter nos comandos se quiser, mas ele não exibirá os metodos dessa variavel
-# Para colocar descrição nas opções do comando, importe isso:
+Voce pode colocar só "inter" na declaração da interaction, ela puxa todos os metodos que existe porem, não exibirá as opções, ai tem q consultar a documentação ou saber de cabeça
+
+## Descrição em comandos, importar isso:
     from disnake.ext.commands import Param
 
-# Exemplo de como usa:
+## Exemplo de uso:
     @bot.slash_command(name='', description='')     
     async def scrim(self, inter: disnake.ApplicationCommandInteraction,
                     texto: str = Param(description='Insira a descrição da opções aqui')):
@@ -45,24 +46,33 @@ obs: praticamente todos os comandos na biblioteca disnake são assíncronos, ent
 
 
 
-# Como fazer um cog, isso seria usar outro arquivo pra executar comandos dentro
+## Cog
+Você usará cogs quando precisar criar outro arquivo com comandos dentro, seja comando com preffix ou slash
 
-    class Classe_principal_do_cog(commands.Cog):
+
+    class Comandos(commands.Cog):
 
     def __init__(self, bot):
         self.bot = bot
 
     @commands.slash_command(name='', description='')
     async def comando_nome(self, inter):
-        pass
+        'Codigo do comando aqui'
 
-# Note, para declarar slash commands dentro de uma cog, se usa essa sintaxe @commands.slash_command e pra isso precisa importar isso 
-    from disnake.ext import commands
+    def setup(bot):
+    bot.add_cog(Comandos(bot))
 
 
-# Essa função tem que ter na ultima linha de todo cog pra funcionar
-    def setup(bot: commands.Bot):
-        bot.add_cog(Classe_principal_do_cog(bot))
+Para declarar a cog e colocar o comando dentro, precisa criar uma classe necessariamente, e nas ultimas linhas do arquivo deve estar a função setup, que servirá como "bootar" a cog e puxar a variavel bot da classe principal da main
+
+#### Note, para declarar comandos dentro da classe da cog, a sintaxe do decorator muda, conforme os exemplos:
+    @commands.slash_command - Para slash commands
+    async def slash(self):
+
+    @commands.command() - Para comando com preffix
+        from disnake.ext import commands
+
+
 
 
 
@@ -75,7 +85,10 @@ obs: praticamente todos os comandos na biblioteca disnake são assíncronos, ent
 
 
 # Botão
-# É assim que faz um botão, dentro de uma classe, esse exemplo possui 2 botões, todo botão precisa ter um custom_id, emoji é opcional, qualquer emoji que der pra colocar ali e exibir, da certo, seja do discord ou de fora. Quando for chamar um botão, sempre defina a variavel bot, que será recebida da classe My_bot() no main.pý
+#### Há 2 formas de criar botões, a primeira é criar um classe disnake.ui.View e colocar os botoes com decorators, a segunda forma é criar uma classe View e uma classe disnake.ui.Button, então usar a classe view para chamar a classe Button, isso é útil quando os dados do botão não forem determinados e quando tiver varios botoes então usar um loop for. 
+    
+    Botão com decorator
+
     class Exemplo_botão(disnake.ui.View):
         def __init__(self, bot):
             self.bot = bot
@@ -83,16 +96,39 @@ obs: praticamente todos os comandos na biblioteca disnake são assíncronos, ent
 
     @disnake.ui.button(style=ButtonStyle.green, custom_id='sim', emoji='✔️')
     async def sim(self, button: disnake.ui.Button, inter):
-        pass
+        'response do botão aqui'
 
     @disnake.ui.button(style=ButtonStyle.green, custom_id='não', emoji='✔️')
     async def nao(self, button: disnake.ui.Button, inter):
-        pass
+        'response do botão aqui'
+
+
+    Botão sem decorator
+
+    class Horario(ui.View):
+        def __init__(self, bot):
+            super().__init__(timeout=None)
+    
+        self.add_item(self.Horario_botao(bot=bot, 
+                                         label='Nome botão', 
+                                         style=ButtonStyle.green, 
+                                         custom_id='id custom', 
+                                         emoji='🔥'))
+
+
+    class Horario_botao(ui.Button):
+        def __init__(self, bot, label, style, custom_id, emoji):
+    
+            super().__init__(label=label, style=style, custom_id=custom_id, emoji=emoji)
+
+        async def callback(self, inter: MessageInteraction):
+            'response do botão aqui'
+
 
 
 
 # Select menu
-# Menus selecionaveis, aquela caixa preto que contem opções, é assim que faz, só seguir o exemplo
+Menus selecionaveis, aquela caixa preto que contem opções, é assim que faz, só seguir o exemplo
     class Confirmação_finalizar_menu(disnake.ui.StringSelect):
         def __init__(self, bot):
             self.bot = bot
@@ -115,17 +151,15 @@ obs: praticamente todos os comandos na biblioteca disnake são assíncronos, ent
         )
 
     async def callback(self, inter: disnake.MessageInteraction):
-        pass
-
-# No callback você coloca o que quer que aconteça quando uma opção é escolhida, para exibir todos as opções use o comando self.values[0] vc tbm pode usar isso na descrição ou titulo da opção, pra aparecer pro usuario
-# Voce pode filtrar cada opção selecioda usando o match case no python, em outras linguagens se chama switch case
-
+        'response do select option'
+         
+Você pode fazer um match case com "self.values[0]" para filtrar qual opção do select o usuario selecionou
 
 
 
 
 # Modal
-# O modal é quando aparece uma caixa de escrita no meio da tela, sobrepondo tudo que havia antes
+
     class SelectModal(disnake.ui.Modal):
         def __init__(self, bot):
             self.bot = bot
@@ -142,4 +176,3 @@ obs: praticamente todos os comandos na biblioteca disnake são assíncronos, ent
     async def callback(self, inter: disnake.ModalInteraction) -> None:
 
         for custom_id, texto_digitado in inter.text_values.items():
-# Para exibir ou tratar as respostas, esse esse for, ele exibe o custom id e o texto digito pelo usuario
