@@ -2,7 +2,7 @@ import disnake
 from disnake import Intents
 from disnake.ext import commands
 
-import aiosqlite
+from aiosqlite import connect
 
 import os
 from dotenv import load_dotenv
@@ -25,7 +25,7 @@ class MyBot(commands.Bot):
         self.persistent_views_added = False
 
     async def on_ready(self):
-        atividade = disnake.Game(name="no Inhouse Academy")
+        atividade = disnake.Game(name="jogos")
         await self.change_presence(status=disnake.Status.online, activity=atividade)
 
         'Aqui é onde torna um botão, selecmenu ou modal em persistente, ou seja, mesmo que reinicie o bot, continuará funcionando'
@@ -59,7 +59,7 @@ class MyBot(commands.Bot):
     await self.bot.execute("INSERT INTO Scrim_times(Coloque aqui todos os valores separados por virgula que serão inseridos no database) VALUES(Insira a quantidade de valores que serão inseridos com ? e separando por virgula) WHERE Scrim_n = ?", insira aqui a variável do scrim_n)
     await self.bot.execute(f"UPDATE Scrim_times SET Time = "{variavel do time aqui}" WHERE Scrim_n = '{variavel scrim_n}' ")'''
     async def execute(self, query, *values):
-        async with aiosqlite.connect("database.db") as db:
+        async with connect("database.db") as db:
             async with db.cursor() as cur:
                 await cur.execute(query, tuple(values))
             await db.commit()
@@ -77,7 +77,7 @@ class MyBot(commands.Bot):
     claro que se quiser, não precisa guardar os dados em uma variavel, já pode usar direto dados[posição da variavel] direto a onde vc vai precisar dela
     '''
     async def buscar(self, query, *values):
-        async with aiosqlite.connect("database.db") as db:
+        async with connect("database.db") as db:
             async with db.cursor() as cur:
                 exe = await cur.execute(query, tuple(values))
                 row = await exe.fetchone()
@@ -87,7 +87,7 @@ class MyBot(commands.Bot):
 
     'buscar_id é igual o buscar, porém pra pegar somente um valor, sua função é identica a de cima com essa unica diferença, use como achar melhor'
     async def buscar_id(self, query, *values):
-        async with aiosqlite.connect("database.db") as db:
+        async with connect("database.db") as db:
             async with db.cursor() as cur:
                 exe = await cur.execute(query, values)
                 row = await exe.fetchmany(size=5)
